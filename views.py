@@ -233,10 +233,10 @@ def delete_special_day(request, pk):
     """Soft-delete a special day."""
     hub = _hub_id(request)
 
+    special = get_object_or_404(
+        SpecialDay, id=pk, hub_id=hub, is_deleted=False,
+    )
     try:
-        special = get_object_or_404(
-            SpecialDay, id=pk, hub_id=hub, is_deleted=False,
-        )
         special.delete()
         return JsonResponse({'success': True})
     except Exception as e:
