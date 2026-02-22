@@ -1,0 +1,289 @@
+{% load i18n %}
+{% load djicons %}
+
+<script>
+function specialDaysApp() {
+    return {
+        showAddModal: false,
+        editingId: null,
+        form: {
+            date: '',
+            name: '',
+            is_closed: true,
+            open_time: '',
+            close_time: '',
+            recurring_yearly: false,
+            notes: '',
+        },
+        saving: false,
+        deleting: null,
+
+        resetForm() {
+            this.form = {
+                date: '',
+                name: '',
+                is_closed: true,
+                open_time: '',
+                close_time: '',
+                recurring_yearly: false,
+                notes: '',
+            };
+        },
+
+        openAdd() {
+            this.resetForm();
+            this.editingId = null;
+            this.showAddModal = true;
+        },
+
+        openEdit(id, data) {
+            this.form = { ...data };
+            this.editingId = id;
+            this.showAddModal = true;
+        },
+
+        closeModal() {
+            this.showAddModal = false;
+            this.editingId = null;
+        },
+
+        async save() {
+            this.saving = true;
+            try {
+                const url = this.editingId
+                    ? `/m/schedules/special-days/${this.editingId}/edit/`
+                    : '{% url "schedules:add_special_day" %}';
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(this.form)
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    this.showToast(
+                        this.editingId ? '{% trans "Dia especial actualizado" %}' : '{% trans "Dia especial creado" %}',
+                        'success'
+                    );
+                    this.closeModal();
+                    htmx.ajax('GET', '{% url "schedules:special_days" %}', {target: '#main-content-area', swap: 'innerHTML'});
+                } else {
+                    throw new Error(result.error || '{% trans "Error al guardar" %}');
+                }
+            } catch (error) {
+                this.showToast(error.message || '{% trans "Error" %}', 'error');
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async deleteDay(id) {
+            if (!confirm('{% trans "Eliminar este dia especial?" %}')) return;
+            this.deleting = id;
+            try {
+                const response = await fetch(`/m/schedules/special-days/${id}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    this.showToast('{% trans "Dia especial eliminado" %}', 'success');
+                    htmx.ajax('GET', '{% url "schedules:special_days" %}', {target: '#main-content-area', swap: 'innerHTML'});
+                } else {
+                    throw new Error(result.error || '{% trans "Error al eliminar" %}');
+                }
+            } catch (error) {
+                this.showToast(error.message || '{% trans "Error" %}', 'error');
+            } finally {
+                this.deleting = null;
+            }
+        },
+
+        showToast(message, type = 'primary') {
+            if (window.UX && window.UX.toast) {
+                window.UX.toast(message, { type: type });
+            }
+        }
+    }
+}
+</script>
+
+{% csrf_token %}
+<div x-data="specialDaysApp()" class="p-4">
+
+    <!-- Header with Add button -->
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">{% trans "Dias Especiales y Festivos" %}</h2>
+        <button class="btn color-primary btn-sm" @click="openAdd()">
+            {% icon "add-outline" %} {% trans "Agregar Dia" %}
+        </button>
+    </div>
+
+    <!-- Special Days List -->
+    {% if special_days %}
+    <div class="card mb-4">
+        <div class="list">
+            {% for day in special_days %}
+            <div class="list-item list-item-multiline">
+                <div class="list-item-start">
+                    {% if day.is_closed %}
+                        <div class="w-10 h-10 rounded-lg bg-error/10 flex items-center justify-center">
+                            {% icon "close-circle-outline" css_class="text-error" %}
+                        </div>
+                    {% else %}
+                        <div class="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center">
+                            {% icon "time-outline" css_class="text-warning" %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="list-item-content">
+                    <div class="list-item-label">
+                        {{ day.name }}
+                        {% if day.recurring_yearly %}
+                            <span class="badge badge-sm color-primary ml-2">{% trans "Anual" %}</span>
+                        {% endif %}
+                    </div>
+                    <div class="list-item-note">
+                        {{ day.date|date:"d/m/Y" }}
+                        {% if not day.is_closed and day.open_time and day.close_time %}
+                            &mdash; {{ day.open_time|time:"H:i" }} - {{ day.close_time|time:"H:i" }}
+                        {% elif day.is_closed %}
+                            &mdash; {% trans "Cerrado" %}
+                        {% endif %}
+                    </div>
+                    {% if day.notes %}
+                    <div class="list-item-note text-xs">{{ day.notes }}</div>
+                    {% endif %}
+                </div>
+                <div class="list-item-end flex gap-1">
+                    <button class="btn btn-ghost btn-sm"
+                        @click="openEdit('{{ day.pk }}', {
+                            date: '{{ day.date|date:"Y-m-d" }}',
+                            name: '{{ day.name|escapejs }}',
+                            is_closed: {{ day.is_closed|lower }},
+                            open_time: '{% if day.open_time %}{{ day.open_time|time:"H:i" }}{% endif %}',
+                            close_time: '{% if day.close_time %}{{ day.close_time|time:"H:i" }}{% endif %}',
+                            recurring_yearly: {{ day.recurring_yearly|lower }},
+                            notes: '{{ day.notes|escapejs }}'
+                        })">
+                        {% icon "create-outline" %}
+                    </button>
+                    <button class="btn btn-ghost btn-sm text-error"
+                        @click="deleteDay('{{ day.pk }}')"
+                        :disabled="deleting === '{{ day.pk }}'">
+                        {% icon "trash-outline" %}
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="card mb-4">
+        <div class="card-body text-center py-8 text-muted">
+            {% icon "calendar-outline" css_class="text-5xl block mx-auto mb-2" %}
+            <p class="mt-2">{% trans "No hay dias especiales configurados" %}</p>
+            <button class="btn color-primary btn-sm mt-3" @click="openAdd()">
+                {% icon "add-outline" %} {% trans "Agregar primer dia especial" %}
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Schedule Overrides -->
+    {% if overrides %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">{% icon "swap-horizontal-outline" css_class="text-warning" %} {% trans "Cambios Temporales de Horario" %}</h3>
+        </div>
+        <div class="list">
+            {% for override in overrides %}
+            <div class="list-item list-item-multiline">
+                <div class="list-item-content">
+                    <div class="list-item-label">{{ override.reason }}</div>
+                    <div class="list-item-note">
+                        {{ override.start_date|date:"d/m/Y" }} - {{ override.end_date|date:"d/m/Y" }}
+                        {% if override.is_closed %}
+                            &mdash; {% trans "Cerrado" %}
+                        {% elif override.open_time and override.close_time %}
+                            &mdash; {{ override.open_time|time:"H:i" }} - {{ override.close_time|time:"H:i" }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-backdrop" :data-state="showAddModal ? 'open' : 'closed'" @click.self="closeModal()">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" x-text="editingId ? '{% trans "Editar Dia Especial" %}' : '{% trans "Nuevo Dia Especial" %}'"></h3>
+                <button class="modal-close" @click="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-4">
+                    <label class="form-group-label">{% trans "Fecha" %}</label>
+                    <input type="date" class="input" x-model="form.date">
+                </div>
+
+                <div class="form-group mb-4">
+                    <label class="form-group-label">{% trans "Nombre" %}</label>
+                    <input type="text" class="input" x-model="form.name" placeholder="{% trans 'Ej: Navidad, Dia festivo local...' %}">
+                </div>
+
+                <div class="form-group mb-4">
+                    <label class="form-group-label flex items-center gap-2">
+                        {% trans "Cerrado todo el dia" %}
+                        <label class="toggle color-error">
+                            <input type="checkbox" x-model="form.is_closed">
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                        </label>
+                    </label>
+                </div>
+
+                <template x-if="!form.is_closed">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="form-group">
+                            <label class="form-group-label">{% trans "Apertura" %}</label>
+                            <input type="time" class="input" x-model="form.open_time">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-group-label">{% trans "Cierre" %}</label>
+                            <input type="time" class="input" x-model="form.close_time">
+                        </div>
+                    </div>
+                </template>
+
+                <div class="form-group mb-4">
+                    <label class="form-group-label flex items-center gap-2">
+                        {% trans "Se repite cada ano" %}
+                        <label class="toggle color-primary">
+                            <input type="checkbox" x-model="form.recurring_yearly">
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                        </label>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-group-label">{% trans "Notas" %}</label>
+                    <textarea class="textarea" rows="2" x-model="form.notes" placeholder="{% trans 'Notas adicionales...' %}"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @click="closeModal()">{% trans "Cancelar" %}</button>
+                <button class="btn color-primary" @click="save()" :disabled="saving">
+                    <span x-show="!saving">{% icon "save-outline" %} {% trans "Guardar" %}</span>
+                    <span x-show="saving" class="loading loading-sm"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

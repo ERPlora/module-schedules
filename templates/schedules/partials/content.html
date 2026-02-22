@@ -1,0 +1,218 @@
+{% load i18n %}
+{% load djicons %}
+
+<script>
+function schedulesDashboard() {
+    return {
+        editingDay: null,
+        editForm: {
+            day_of_week: 0,
+            is_closed: false,
+            open_time: '09:00',
+            close_time: '18:00',
+            break_start: '',
+            break_end: '',
+        },
+        saving: false,
+
+        openEdit(dayNum, hours) {
+            this.editForm.day_of_week = dayNum;
+            if (hours) {
+                this.editForm.is_closed = hours.is_closed;
+                this.editForm.open_time = hours.open_time || '09:00';
+                this.editForm.close_time = hours.close_time || '18:00';
+                this.editForm.break_start = hours.break_start || '';
+                this.editForm.break_end = hours.break_end || '';
+            } else {
+                this.editForm.is_closed = false;
+                this.editForm.open_time = '09:00';
+                this.editForm.close_time = '18:00';
+                this.editForm.break_start = '';
+                this.editForm.break_end = '';
+            }
+            this.editingDay = dayNum;
+        },
+
+        cancelEdit() {
+            this.editingDay = null;
+        },
+
+        async saveHours() {
+            this.saving = true;
+            try {
+                const response = await fetch('{% url "schedules:edit_hours" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(this.editForm)
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    this.showToast('{% trans "Horario guardado" %}', 'success');
+                    this.editingDay = null;
+                    htmx.ajax('GET', '{% url "schedules:dashboard" %}', {target: '#main-content-area', swap: 'innerHTML'});
+                } else {
+                    throw new Error(result.error || '{% trans "Error al guardar" %}');
+                }
+            } catch (error) {
+                this.showToast(error.message || '{% trans "Error al guardar horario" %}', 'error');
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        showToast(message, type = 'primary') {
+            if (window.UX && window.UX.toast) {
+                window.UX.toast(message, { type: type });
+            }
+        }
+    }
+}
+</script>
+
+{% csrf_token %}
+<div x-data="schedulesDashboard()" class="p-4">
+
+    <!-- Today's Status -->
+    <div class="card mb-4">
+        <div class="card-body p-6">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-xl flex items-center justify-center {% if is_open %}bg-success/10{% else %}bg-error/10{% endif %}">
+                    {% if is_open %}
+                        {% icon "checkmark-circle-outline" css_class="text-3xl text-success" %}
+                    {% else %}
+                        {% icon "close-circle-outline" css_class="text-3xl text-error" %}
+                    {% endif %}
+                </div>
+                <div>
+                    <div class="text-lg font-semibold">
+                        {% if is_open %}{% trans "Abierto Ahora" %}{% else %}{% trans "Cerrado Ahora" %}{% endif %}
+                    </div>
+                    {% if special_today %}
+                        <div class="text-sm text-muted">{{ special_today.name }}</div>
+                    {% elif override_today %}
+                        <div class="text-sm text-muted">{{ override_today.reason }}</div>
+                    {% elif today_hours %}
+                        <div class="text-sm text-muted">
+                            {% if today_hours.is_closed %}
+                                {% trans "Cerrado hoy" %}
+                            {% else %}
+                                {{ today_hours.open_time|time:"H:i" }} - {{ today_hours.close_time|time:"H:i" }}
+                                {% if today_hours.break_start and today_hours.break_end %}
+                                    ({% trans "Descanso" %}: {{ today_hours.break_start|time:"H:i" }} - {{ today_hours.break_end|time:"H:i" }})
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-sm text-muted">{% trans "No hay horario configurado para hoy" %}</div>
+                    {% endif %}
+                </div>
+                {% if next_special %}
+                <div class="ml-auto text-right">
+                    <div class="text-xs text-muted">{% trans "Proximo dia especial" %}</div>
+                    <div class="text-sm font-medium">{{ next_special.name }}</div>
+                    <div class="text-xs text-muted">{{ next_special.date|date:"d/m/Y" }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Schedule Grid -->
+    <div class="card">
+        <div class="card-header">
+            <div class="flex justify-between items-center">
+                <h2 class="card-title">{% icon "time-outline" css_class="text-primary" %} {% trans "Horario Semanal" %}</h2>
+            </div>
+        </div>
+        <div class="list">
+            {% for day in week %}
+            <div class="list-item list-item-multiline">
+                <div class="list-item-content">
+                    <div class="list-item-label font-semibold">{{ day.day_label }}</div>
+                    {% if day.hours %}
+                        {% if day.hours.is_closed %}
+                            <div class="list-item-note text-error">{% trans "Cerrado" %}</div>
+                        {% else %}
+                            <div class="list-item-note">
+                                {{ day.hours.open_time|time:"H:i" }} - {{ day.hours.close_time|time:"H:i" }}
+                                {% if day.hours.break_start and day.hours.break_end %}
+                                    <span class="text-warning ml-2">
+                                        {% icon "cafe-outline" css_class="text-sm" %}
+                                        {{ day.hours.break_start|time:"H:i" }} - {{ day.hours.break_end|time:"H:i" }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="list-item-note text-muted">{% trans "Sin configurar" %}</div>
+                    {% endif %}
+                </div>
+                <div class="list-item-end">
+                    <button class="btn btn-ghost btn-sm"
+                        @click="openEdit({{ day.day_num }}, {% if day.hours %}{ is_closed: {{ day.hours.is_closed|lower }}, open_time: '{{ day.hours.open_time|time:"H:i" }}', close_time: '{{ day.hours.close_time|time:"H:i" }}', break_start: '{% if day.hours.break_start %}{{ day.hours.break_start|time:"H:i" }}{% endif %}', break_end: '{% if day.hours.break_end %}{{ day.hours.break_end|time:"H:i" }}{% endif %}' }{% else %}null{% endif %})">
+                        {% icon "create-outline" %}
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-backdrop" :data-state="editingDay !== null ? 'open' : 'closed'" @click.self="cancelEdit()">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">{% trans "Editar Horario" %}</h3>
+                <button class="modal-close" @click="cancelEdit()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-4">
+                    <label class="form-group-label flex items-center gap-2">
+                        {% trans "Cerrado" %}
+                        <label class="toggle color-error">
+                            <input type="checkbox" x-model="editForm.is_closed">
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                        </label>
+                    </label>
+                </div>
+
+                <template x-if="!editForm.is_closed">
+                    <div>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="form-group">
+                                <label class="form-group-label">{% trans "Apertura" %}</label>
+                                <input type="time" class="input" x-model="editForm.open_time">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-group-label">{% trans "Cierre" %}</label>
+                                <input type="time" class="input" x-model="editForm.close_time">
+                            </div>
+                        </div>
+
+                        <div class="text-sm text-muted mb-2">{% trans "Descanso (opcional)" %}</div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label class="form-group-label">{% trans "Inicio descanso" %}</label>
+                                <input type="time" class="input" x-model="editForm.break_start">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-group-label">{% trans "Fin descanso" %}</label>
+                                <input type="time" class="input" x-model="editForm.break_end">
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @click="cancelEdit()">{% trans "Cancelar" %}</button>
+                <button class="btn color-primary" @click="saveHours()" :disabled="saving">
+                    <span x-show="!saving">{% icon "save-outline" %} {% trans "Guardar" %}</span>
+                    <span x-show="saving" class="loading loading-sm"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

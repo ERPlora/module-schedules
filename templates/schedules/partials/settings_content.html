@@ -1,0 +1,167 @@
+{% load i18n %}
+{% load djicons %}
+
+<script>
+function scheduleSettingsApp() {
+    return {
+        settings: {
+            timezone: '{{ config.timezone|escapejs }}',
+            week_starts_on: {{ config.week_starts_on }},
+            slot_duration: {{ config.slot_duration }},
+            auto_close_enabled: {{ config.auto_close_enabled|lower }},
+        },
+        saving: false,
+
+        async updateSetting(key, value) {
+            const oldValue = this.settings[key];
+            this.settings[key] = value;
+
+            try {
+                const response = await fetch('{% url "schedules:settings_save" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(this.settings)
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    this.showToast('{% trans "Configuracion guardada" %}', 'success');
+                } else {
+                    throw new Error(result.error || '{% trans "Error al guardar" %}');
+                }
+            } catch (error) {
+                this.showToast(error.message || '{% trans "Error al guardar la configuracion" %}', 'error');
+                this.settings[key] = oldValue;
+            }
+        },
+
+        async saveAll() {
+            this.saving = true;
+            try {
+                const response = await fetch('{% url "schedules:settings_save" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(this.settings)
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    this.showToast('{% trans "Configuracion guardada" %}', 'success');
+                } else {
+                    throw new Error(result.error || '{% trans "Error al guardar" %}');
+                }
+            } catch (error) {
+                this.showToast(error.message || '{% trans "Error al guardar" %}', 'error');
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        showToast(message, type = 'primary') {
+            if (window.UX && window.UX.toast) {
+                window.UX.toast(message, { type: type });
+            }
+        }
+    }
+}
+</script>
+
+{% csrf_token %}
+<div x-data="scheduleSettingsApp()" class="p-4">
+
+    <!-- Timezone -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title">{% icon "globe-outline" css_class="text-primary" %} {% trans "Zona Horaria" %}</h3>
+        </div>
+        <div class="list">
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-label">{% trans "Zona Horaria" %}</div>
+                    <div class="list-item-note">{% trans "Zona horaria IANA para este hub" %}</div>
+                </div>
+                <div class="list-item-end" style="min-width: 200px;">
+                    <input type="text" class="input" x-model="settings.timezone"
+                        @change="updateSetting('timezone', $event.target.value)"
+                        placeholder="Europe/Madrid">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Week & Slot Settings -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title">{% icon "calendar-outline" css_class="text-warning" %} {% trans "Semana y Franjas Horarias" %}</h3>
+        </div>
+        <div class="list">
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-label">{% trans "La semana empieza en" %}</div>
+                    <div class="list-item-note">{% trans "Dia en que comienza la semana en el calendario" %}</div>
+                </div>
+                <div class="list-item-end" style="min-width: 160px;">
+                    <select class="select" x-model="settings.week_starts_on"
+                        @change="updateSetting('week_starts_on', parseInt($event.target.value))">
+                        <option value="1">{% trans "Lunes" %}</option>
+                        <option value="2">{% trans "Martes" %}</option>
+                        <option value="3">{% trans "Miercoles" %}</option>
+                        <option value="4">{% trans "Jueves" %}</option>
+                        <option value="5">{% trans "Viernes" %}</option>
+                        <option value="6">{% trans "Sabado" %}</option>
+                        <option value="7">{% trans "Domingo" %}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-label">{% trans "Duracion de franja horaria" %}</div>
+                    <div class="list-item-note">{% trans "Duracion predeterminada de cada franja en minutos" %}</div>
+                </div>
+                <div class="list-item-end" style="min-width: 120px;">
+                    <div class="flex items-center gap-2">
+                        <input type="number" class="input" x-model.number="settings.slot_duration"
+                            @change="updateSetting('slot_duration', parseInt($event.target.value))"
+                            min="5" max="120" step="5">
+                        <span class="text-sm text-muted">{% trans "min" %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-close -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title">{% icon "settings-outline" css_class="text-success" %} {% trans "Automatizacion" %}</h3>
+        </div>
+        <div class="list">
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-label">{% trans "Cierre automatico" %}</div>
+                    <div class="list-item-note">{% trans "Marcar automaticamente el negocio como cerrado despues del horario de cierre" %}</div>
+                </div>
+                <div class="list-item-end">
+                    <label class="toggle color-success">
+                        <input type="checkbox"
+                            :checked="settings.auto_close_enabled"
+                            @change="updateSetting('auto_close_enabled', $event.target.checked)">
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save All Button -->
+    <div class="flex justify-end">
+        <button class="btn color-primary" @click="saveAll()" :disabled="saving">
+            <span x-show="!saving">{% icon "save-outline" %} {% trans "Guardar Todo" %}</span>
+            <span x-show="saving" class="loading loading-sm"></span>
+        </button>
+    </div>
+</div>
