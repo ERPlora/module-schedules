@@ -7,6 +7,10 @@ urlpatterns = [
     # Dashboard (Weekly Hours)
     path('', views.dashboard, name='dashboard'),
 
+    # Navigation tab aliases
+    path('special_days/', views.special_days, name='special_days'),
+
+
     # Edit hours for a day
     path('hours/edit/', views.edit_hours, name='edit_hours'),
 
