@@ -1,0 +1,398 @@
+# English translations for Schedules
+# Copyright (C) 2025
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-25 00:00+0000\n"
+"PO-Revision-Date: 2026-02-25 00:00+0000\n"
+"Last-Translator: ERPlora Team <info@erplora.com>\n"
+"Language: en\n"
+"Language-Team: English\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: module.py
+msgid "Schedules"
+msgstr "Schedules"
+
+msgid "Business hours, holiday schedules, and availability management"
+msgstr "Business hours, holiday schedules, and availability management"
+
+msgid "Hours"
+msgstr "Hours"
+
+msgid "Special Days"
+msgstr "Special Days"
+
+msgid "Settings"
+msgstr "Settings"
+
+#: models.py - DAY_CHOICES
+msgid "Monday"
+msgstr "Monday"
+
+msgid "Tuesday"
+msgstr "Tuesday"
+
+msgid "Wednesday"
+msgstr "Wednesday"
+
+msgid "Thursday"
+msgstr "Thursday"
+
+msgid "Friday"
+msgstr "Friday"
+
+msgid "Saturday"
+msgstr "Saturday"
+
+msgid "Sunday"
+msgstr "Sunday"
+
+#: models.py - ScheduleSettings
+msgid "Timezone"
+msgstr "Timezone"
+
+msgid "IANA timezone for this hub (e.g. Europe/Madrid, America/New_York)."
+msgstr "IANA timezone for this hub (e.g. Europe/Madrid, America/New_York)."
+
+msgid "Week Starts On"
+msgstr "Week Starts On"
+
+msgid "1=Monday, 7=Sunday"
+msgstr "1=Monday, 7=Sunday"
+
+msgid "Slot Duration"
+msgstr "Slot Duration"
+
+msgid "Default time slot in minutes"
+msgstr "Default time slot in minutes"
+
+msgid "Auto Close Enabled"
+msgstr "Auto Close Enabled"
+
+msgid "Automatically mark the business as closed after closing time."
+msgstr "Automatically mark the business as closed after closing time."
+
+msgid "Schedule Settings"
+msgstr "Schedule Settings"
+
+#: models.py - BusinessHours
+msgid "Day of Week"
+msgstr "Day of Week"
+
+msgid "0=Monday, 6=Sunday"
+msgstr "0=Monday, 6=Sunday"
+
+msgid "Open Time"
+msgstr "Open Time"
+
+msgid "Close Time"
+msgstr "Close Time"
+
+msgid "Closed"
+msgstr "Closed"
+
+msgid "If checked, the business is closed on this day."
+msgstr "If checked, the business is closed on this day."
+
+msgid "Break Start"
+msgstr "Break Start"
+
+msgid "Start of midday break (optional)."
+msgstr "Start of midday break (optional)."
+
+msgid "Break End"
+msgstr "Break End"
+
+msgid "End of midday break (optional)."
+msgstr "End of midday break (optional)."
+
+msgid "Business Hours"
+msgstr "Business Hours"
+
+msgid "Open time must be before close time."
+msgstr "Open time must be before close time."
+
+msgid "Break start must be before break end."
+msgstr "Break start must be before break end."
+
+msgid "Break start must be after open time."
+msgstr "Break start must be after open time."
+
+msgid "Break end must be before close time."
+msgstr "Break end must be before close time."
+
+#: models.py - SpecialDay
+msgid "Date"
+msgstr "Date"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Name of the holiday or special day."
+msgstr "Name of the holiday or special day."
+
+msgid "If checked, the business is fully closed on this day."
+msgstr "If checked, the business is fully closed on this day."
+
+msgid "Special open time (only if not fully closed)."
+msgstr "Special open time (only if not fully closed)."
+
+msgid "Special close time (only if not fully closed)."
+msgstr "Special close time (only if not fully closed)."
+
+msgid "Recurring Yearly"
+msgstr "Recurring Yearly"
+
+msgid "If checked, this special day recurs every year on the same date."
+msgstr "If checked, this special day recurs every year on the same date."
+
+msgid "Notes"
+msgstr "Notes"
+
+msgid "Special Day"
+msgstr "Special Day"
+
+msgid "Special Days"
+msgstr "Special Days"
+
+msgid "Open time and close time are required when the day is not fully closed."
+msgstr "Open time and close time are required when the day is not fully closed."
+
+#: models.py - ScheduleOverride
+msgid "Start Date"
+msgstr "Start Date"
+
+msgid "End Date"
+msgstr "End Date"
+
+msgid "Reason"
+msgstr "Reason"
+
+msgid "Reason for the schedule override."
+msgstr "Reason for the schedule override."
+
+msgid "Override open time (leave empty to use regular hours)."
+msgstr "Override open time (leave empty to use regular hours)."
+
+msgid "Override close time (leave empty to use regular hours)."
+msgstr "Override close time (leave empty to use regular hours)."
+
+msgid "If checked, the business is fully closed during this period."
+msgstr "If checked, the business is fully closed during this period."
+
+msgid "Schedule Override"
+msgstr "Schedule Override"
+
+msgid "Schedule Overrides"
+msgstr "Schedule Overrides"
+
+msgid "Start date must be on or before end date."
+msgstr "Start date must be on or before end date."
+
+#: views.py
+msgid "Closed today"
+msgstr "Closed today"
+
+msgid "Regular hours"
+msgstr "Regular hours"
+
+msgid "Outside business hours"
+msgstr "Outside business hours"
+
+msgid "No hours configured"
+msgstr "No hours configured"
+
+#: templates - settings
+msgid "Configuracion guardada"
+msgstr "Configuration saved"
+
+msgid "Error al guardar"
+msgstr "Error saving"
+
+msgid "Error al guardar la configuracion"
+msgstr "Error saving configuration"
+
+msgid "Zona Horaria"
+msgstr "Timezone"
+
+msgid "Zona horaria IANA para este hub"
+msgstr "IANA timezone for this hub"
+
+msgid "Semana y Franjas Horarias"
+msgstr "Week & Time Slots"
+
+msgid "La semana empieza en"
+msgstr "Week starts on"
+
+msgid "Dia en que comienza la semana en el calendario"
+msgstr "Day the week begins in the calendar"
+
+msgid "Lunes"
+msgstr "Monday"
+
+msgid "Martes"
+msgstr "Tuesday"
+
+msgid "Miercoles"
+msgstr "Wednesday"
+
+msgid "Jueves"
+msgstr "Thursday"
+
+msgid "Viernes"
+msgstr "Friday"
+
+msgid "Sabado"
+msgstr "Saturday"
+
+msgid "Domingo"
+msgstr "Sunday"
+
+msgid "Duracion de franja horaria"
+msgstr "Time slot duration"
+
+msgid "Duracion predeterminada de cada franja en minutos"
+msgstr "Default duration of each slot in minutes"
+
+msgid "min"
+msgstr "min"
+
+msgid "Automatizacion"
+msgstr "Automation"
+
+msgid "Cierre automatico"
+msgstr "Auto close"
+
+msgid "Marcar automaticamente el negocio como cerrado despues del horario de cierre"
+msgstr "Automatically mark the business as closed after closing time"
+
+msgid "Guardar Todo"
+msgstr "Save All"
+
+#: templates - special days
+msgid "Dia especial actualizado"
+msgstr "Special day updated"
+
+msgid "Dia especial creado"
+msgstr "Special day created"
+
+msgid "Error"
+msgstr "Error"
+
+msgid "Eliminar este dia especial?"
+msgstr "Delete this special day?"
+
+msgid "Dia especial eliminado"
+msgstr "Special day deleted"
+
+msgid "Error al eliminar"
+msgstr "Error deleting"
+
+msgid "Dias Especiales y Festivos"
+msgstr "Special Days & Holidays"
+
+msgid "Agregar Dia"
+msgstr "Add Day"
+
+msgid "Anual"
+msgstr "Annual"
+
+msgid "Cerrado"
+msgstr "Closed"
+
+msgid "No hay dias especiales configurados"
+msgstr "No special days configured"
+
+msgid "Agregar primer dia especial"
+msgstr "Add first special day"
+
+msgid "Cambios Temporales de Horario"
+msgstr "Temporary Schedule Changes"
+
+msgid "Editar Dia Especial"
+msgstr "Edit Special Day"
+
+msgid "Nuevo Dia Especial"
+msgstr "New Special Day"
+
+msgid "Fecha"
+msgstr "Date"
+
+msgid "Nombre"
+msgstr "Name"
+
+msgid "Ej: Navidad, Dia festivo local..."
+msgstr "E.g. Christmas, Local holiday..."
+
+msgid "Cerrado todo el dia"
+msgstr "Closed all day"
+
+msgid "Apertura"
+msgstr "Opening"
+
+msgid "Cierre"
+msgstr "Closing"
+
+msgid "Se repite cada ano"
+msgstr "Repeats every year"
+
+msgid "Notas"
+msgstr "Notes"
+
+msgid "Notas adicionales..."
+msgstr "Additional notes..."
+
+msgid "Cancelar"
+msgstr "Cancel"
+
+msgid "Guardar"
+msgstr "Save"
+
+#: templates - hours
+msgid "Horario guardado"
+msgstr "Schedule saved"
+
+msgid "Error al guardar horario"
+msgstr "Error saving schedule"
+
+msgid "Abierto Ahora"
+msgstr "Open Now"
+
+msgid "Cerrado Ahora"
+msgstr "Closed Now"
+
+msgid "Cerrado hoy"
+msgstr "Closed today"
+
+msgid "Descanso"
+msgstr "Break"
+
+msgid "No hay horario configurado para hoy"
+msgstr "No schedule configured for today"
+
+msgid "Proximo dia especial"
+msgstr "Next special day"
+
+msgid "Horario Semanal"
+msgstr "Weekly Schedule"
+
+msgid "Sin configurar"
+msgstr "Not configured"
+
+msgid "Editar Horario"
+msgstr "Edit Schedule"
+
+msgid "Descanso (opcional)"
+msgstr "Break (optional)"
+
+msgid "Inicio descanso"
+msgstr "Break start"
+
+msgid "Fin descanso"
+msgstr "Break end"
