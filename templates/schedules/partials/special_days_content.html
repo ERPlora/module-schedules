@@ -1,9 +1,8 @@
 {% load i18n %}
 {% load djicons %}
 
-<script>
-function specialDaysApp() {
-    return {
+{% csrf_token %}
+<div x-data="{
         showAddModal: false,
         editingId: null,
         form: {
@@ -51,8 +50,8 @@ function specialDaysApp() {
             this.saving = true;
             try {
                 const url = this.editingId
-                    ? `/m/schedules/special-days/${this.editingId}/edit/`
-                    : '{% url "schedules:add_special_day" %}';
+                    ? '/m/schedules/special-days/' + this.editingId + '/edit/'
+                    : '{% url 'schedules:add_special_day' %}';
 
                 const response = await fetch(url, {
                     method: 'POST',
@@ -65,26 +64,26 @@ function specialDaysApp() {
                 const result = await response.json();
                 if (response.ok && result.success) {
                     this.showToast(
-                        this.editingId ? '{% trans "Dia especial actualizado" %}' : '{% trans "Dia especial creado" %}',
+                        this.editingId ? '{% trans 'Dia especial actualizado' %}' : '{% trans 'Dia especial creado' %}',
                         'success'
                     );
                     this.closeModal();
-                    htmx.ajax('GET', '{% url "schedules:special_days" %}', {target: '#main-content-area', swap: 'innerHTML'});
+                    htmx.ajax('GET', '{% url 'schedules:special_days' %}', {target: '#main-content-area', swap: 'innerHTML'});
                 } else {
-                    throw new Error(result.error || '{% trans "Error al guardar" %}');
+                    throw new Error(result.error || '{% trans 'Error al guardar' %}');
                 }
             } catch (error) {
-                this.showToast(error.message || '{% trans "Error" %}', 'error');
+                this.showToast(error.message || '{% trans 'Error' %}', 'error');
             } finally {
                 this.saving = false;
             }
         },
 
         async deleteDay(id) {
-            if (!confirm('{% trans "Eliminar este dia especial?" %}')) return;
+            if (!confirm('{% trans 'Eliminar este dia especial?' %}')) return;
             this.deleting = id;
             try {
-                const response = await fetch(`/m/schedules/special-days/${id}/delete/`, {
+                const response = await fetch('/m/schedules/special-days/' + id + '/delete/', {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
@@ -92,29 +91,24 @@ function specialDaysApp() {
                 });
                 const result = await response.json();
                 if (response.ok && result.success) {
-                    this.showToast('{% trans "Dia especial eliminado" %}', 'success');
-                    htmx.ajax('GET', '{% url "schedules:special_days" %}', {target: '#main-content-area', swap: 'innerHTML'});
+                    this.showToast('{% trans 'Dia especial eliminado' %}', 'success');
+                    htmx.ajax('GET', '{% url 'schedules:special_days' %}', {target: '#main-content-area', swap: 'innerHTML'});
                 } else {
-                    throw new Error(result.error || '{% trans "Error al eliminar" %}');
+                    throw new Error(result.error || '{% trans 'Error al eliminar' %}');
                 }
             } catch (error) {
-                this.showToast(error.message || '{% trans "Error" %}', 'error');
+                this.showToast(error.message || '{% trans 'Error' %}', 'error');
             } finally {
                 this.deleting = null;
             }
         },
 
         showToast(message, type = 'primary') {
-            if (window.UX && window.UX.toast) {
-                window.UX.toast(message, { type: type });
+            if (window.showToast) {
+                window.showToast(message, type);
             }
         }
-    }
-}
-</script>
-
-{% csrf_token %}
-<div x-data="specialDaysApp()" class="p-4">
+    }" class="p-4">
 
     <!-- Header with Add button -->
     <div class="flex justify-between items-center mb-4">

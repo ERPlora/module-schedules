@@ -1,9 +1,8 @@
 {% load i18n %}
 {% load djicons %}
 
-<script>
-function schedulesDashboard() {
-    return {
+{% csrf_token %}
+<div x-data="{
         editingDay: null,
         editForm: {
             day_of_week: 0,
@@ -40,7 +39,7 @@ function schedulesDashboard() {
         async saveHours() {
             this.saving = true;
             try {
-                const response = await fetch('{% url "schedules:edit_hours" %}', {
+                const response = await fetch('{% url 'schedules:edit_hours' %}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -50,30 +49,25 @@ function schedulesDashboard() {
                 });
                 const result = await response.json();
                 if (response.ok && result.success) {
-                    this.showToast('{% trans "Horario guardado" %}', 'success');
+                    this.showToast('{% trans 'Horario guardado' %}', 'success');
                     this.editingDay = null;
-                    htmx.ajax('GET', '{% url "schedules:dashboard" %}', {target: '#main-content-area', swap: 'innerHTML'});
+                    htmx.ajax('GET', '{% url 'schedules:dashboard' %}', {target: '#main-content-area', swap: 'innerHTML'});
                 } else {
-                    throw new Error(result.error || '{% trans "Error al guardar" %}');
+                    throw new Error(result.error || '{% trans 'Error al guardar' %}');
                 }
             } catch (error) {
-                this.showToast(error.message || '{% trans "Error al guardar horario" %}', 'error');
+                this.showToast(error.message || '{% trans 'Error al guardar horario' %}', 'error');
             } finally {
                 this.saving = false;
             }
         },
 
         showToast(message, type = 'primary') {
-            if (window.UX && window.UX.toast) {
-                window.UX.toast(message, { type: type });
+            if (window.showToast) {
+                window.showToast(message, type);
             }
         }
-    }
-}
-</script>
-
-{% csrf_token %}
-<div x-data="schedulesDashboard()" class="p-4">
+    }" class="p-4">
 
     <!-- Today's Status -->
     <div class="card mb-4">
